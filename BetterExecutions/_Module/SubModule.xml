@@ -14,7 +14,6 @@
 		<DependedModule Id="StoryMode" DependentVersion="v1.0.0"/>
 		<DependedModule Id="CustomBattle" DependentVersion="v1.0.0"/>
 		<DependedModule Id="BetterCore" DependentVersion="v1.0.0"/>
-		<DependedModule Id="Bastards" DependentVersion="v1.0.0"/>
 	</DependedModules>
 	<SubModules>
 		<SubModule>
