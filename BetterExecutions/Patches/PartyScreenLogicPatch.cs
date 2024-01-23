@@ -12,26 +12,26 @@ namespace BetterExecutions.Patches {
     [HarmonyPatch]
     internal class PartyScreenLogicPatch {
 
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         [HarmonyPatch(typeof(PartyScreenLogic), "ExecuteTroop")]
-        public static void ExecuteTroopPostfix(PartyScreenLogic.PartyCommand command) {
+        public static bool ExecuteTroopPostfix(PartyScreenLogic.PartyCommand command) {
             if (!BetterExecutions.Settings.EnableExecutionLoot)
-                return;
+                return true;
 
             if (!command.Character.IsHero)
-                return;
+                return true;
 
             Settlement closestTownSettlement = SettlementHelper.FindNearestTown((Settlement s) => s.IsTown && !s.IsStarving && !s.IsUnderSiege && !Clan.PlayerClan.MapFaction.IsAtWarWith(s.OwnerClan.MapFaction), null) ?? SettlementHelper.FindNearestTown((Settlement s) => s.IsTown, null);
             TownMarketData marketData = closestTownSettlement.Town.MarketData;
 
-            List<Equipment> equipments = new List<Equipment> {
+            List<Equipment> equipmentList = new List<Equipment> {
                 command.Character.Equipment
             };
 
             if (BetterExecutions.Settings.ExecutionLootCivilianGear)
-                equipments.Add(command.Character.HeroObject.CivilianEquipment);
+                equipmentList.Add(command.Character.HeroObject.CivilianEquipment);
             
-            foreach (Equipment? equipment in equipments) {
+            foreach (Equipment? equipment in equipmentList) {
                 if (equipment != null) {
 
                     foreach (EquipmentIndex equipmentIndex in LootHelper.LootableSlots) {
@@ -55,6 +55,7 @@ namespace BetterExecutions.Patches {
                     }
                 }
             }
+            return true;
         }
     }
 }
