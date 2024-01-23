@@ -1,6 +1,11 @@
 ﻿using BetterCore.Utils;
 using HarmonyLib;
+using Helpers;
+using System.Collections.Generic;
+using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.Extensions;
 using TaleWorlds.CampaignSystem.Party;
+using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 
 namespace BetterExecutions.Patches {
@@ -13,16 +18,41 @@ namespace BetterExecutions.Patches {
             if (!BetterExecutions.Settings.EnableExecutionLoot)
                 return;
 
-            foreach (EquipmentIndex equipmentIndex in LootHelper.LootableSlots) {
+            if (!command.Character.IsHero)
+                return;
 
-                EquipmentElement equipment = command.Character.Equipment.GetEquipmentFromSlot(equipmentIndex);
+            Settlement closestTownSettlement = SettlementHelper.FindNearestTown((Settlement s) => s.IsTown && !s.IsStarving && !s.IsUnderSiege && !Clan.PlayerClan.MapFaction.IsAtWarWith(s.OwnerClan.MapFaction), null) ?? SettlementHelper.FindNearestTown((Settlement s) => s.IsTown, null);
+            TownMarketData marketData = closestTownSettlement.Town.MarketData;
 
-                if (equipment.Item == null)
-                    continue;
+            List<Equipment> equipments = new List<Equipment> {
+                command.Character.Equipment
+            };
 
-                if (MathHelper.RandomChance(BetterExecutions.Settings.ExecutionLootUsableChance)) {
-                    PartyBase.MainParty.ItemRoster.AddToCounts(equipment.Item, 1);
-                    NotifyHelper.WriteMessage("Added " + equipment.Item.Name + " to inventory.", MsgType.Good);
+            if (BetterExecutions.Settings.ExecutionLootCivilianGear)
+                equipments.Add(command.Character.HeroObject.CivilianEquipment);
+            
+            foreach (Equipment? equipment in equipments) {
+                if (equipment != null) {
+
+                    foreach (EquipmentIndex equipmentIndex in LootHelper.LootableSlots) {
+
+                        EquipmentElement equipmentElement = equipment.GetEquipmentFromSlot(equipmentIndex);
+
+                        if (equipmentElement.Item == null)
+                            continue;
+
+                        ItemData itemData = marketData.GetCategoryData(equipmentElement.Item.GetItemCategory());
+
+                        int itemPrice = Campaign.Current.Models.TradeItemPriceFactorModel.GetPrice(equipmentElement, MobileParty.MainParty, null, true, (float)itemData.InStoreValue, itemData.Supply, itemData.Demand);
+
+                        if (!MathHelper.RandomChance(BetterExecutions.Settings.ExecutionLootUsableChance))
+                            continue;
+
+                        if (BetterExecutions.Settings.ExecutionLootPriceThreshold == 0 || BetterExecutions.Settings.ExecutionLootPriceThreshold > itemPrice) {
+                            PartyBase.MainParty.ItemRoster.AddToCounts(equipmentElement.Item, 1);
+                            NotifyHelper.WriteMessage("Added " + equipmentElement.Item.Name + " to inventory.", MsgType.Good);
+                        }
+                    }
                 }
             }
         }

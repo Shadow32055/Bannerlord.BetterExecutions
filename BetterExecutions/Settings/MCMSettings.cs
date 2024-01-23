@@ -70,6 +70,14 @@ namespace BetterExecutions.Settings {
         [SettingPropertyFloatingInteger("Usable Chance", 0f, 1f, "0.0%", Order = 0, RequireRestart = false, HintText = "Chance each piece of gear is in good enough quality to be added to your inventory")]
         public float ExecutionLootUsableChance { get; set; } = .5f;
 
+        [SettingPropertyGroup("Drop Gear")]
+        [SettingPropertyInteger("Price Threshold", 0, 1000000, "0", Order = 1, RequireRestart = false, HintText = "Calculates the price of the item for the player at the closest valid Town. Items with a price higher than this value cannot be obtained. 0 = Limitless")]
+        public int ExecutionLootPriceThreshold { get; set; } = 0;
+
+        [SettingPropertyGroup("Drop Gear")]
+        [SettingPropertyBool("Include Civilian Gear", Order = 2, RequireRestart = false, HintText = "Gear from the victim's Civilian Equipment can be obtained.")]
+        public bool ExecutionLootCivilianGear { get; set; } = false;
+
 
         public override string Id { get { return GetType().Assembly.GetName().Name; } }
         public override string DisplayName { get { return GetType().Assembly.GetName().Name; } }
