@@ -14,7 +14,7 @@ namespace BetterExecutions {
         public static bool HideRelationNotifications = false;
         public static bool RelationChangeInProgress = false;
 
-        public static MCMSettings Settings { get; private set; }
+        public static MCMSettings Settings { get; private set; } = new MCMSettings();
         public static ItemRoster Items { get; set; } = new ItemRoster();
         public static string ModName { get; private set; } = "BetterExecutions";
 

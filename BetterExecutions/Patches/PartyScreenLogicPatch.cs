@@ -14,7 +14,7 @@ namespace BetterExecutions.Patches {
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(PartyScreenLogic), "ExecuteTroop")]
-        public static bool ExecuteTroopPostfix(PartyScreenLogic.PartyCommand command) {
+        public static bool ExecuteTroopPrefix(PartyScreenLogic.PartyCommand command) {
             if (!BetterExecutions.Settings.EnableExecutionLoot)
                 return true;
 
