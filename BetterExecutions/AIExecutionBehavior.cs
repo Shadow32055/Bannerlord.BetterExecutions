@@ -27,6 +27,9 @@ namespace BetterExecutions {
                 if (captor == null || captor == Hero.MainHero || !captor.IsAlive)
                     return;
 
+                if (hero.IsHumanPlayerCharacter == true)
+                    return;
+
                 if (WouldHeroExecute(captor, hero))
                     KillCharacterAction.ApplyByExecution(hero, captor);
             }
