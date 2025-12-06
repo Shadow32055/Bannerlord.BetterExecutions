@@ -21,8 +21,17 @@ namespace BetterExecutions.Patches {
             if (!command.Character.IsHero)
                 return true;
 
-            Settlement closestTownSettlement = SettlementHelper.FindNearestTown((Settlement s) => s.IsTown && !s.IsStarving && !s.IsUnderSiege && !Clan.PlayerClan.MapFaction.IsAtWarWith(s.OwnerClan.MapFaction), null) ?? SettlementHelper.FindNearestTown((Settlement s) => s.IsTown, null);
-            TownMarketData marketData = closestTownSettlement.Town.MarketData;
+            Town closestTownSettlement = SettlementHelper.FindNearestTownToMobileParty(
+                MobileParty.MainParty,
+                MobileParty.NavigationType.None,
+                s => s.IsTown && !s.IsStarving && !s.IsUnderSiege && !Clan.PlayerClan.MapFaction.IsAtWarWith(s.OwnerClan.MapFaction)
+            ) ?? SettlementHelper.FindNearestTownToMobileParty(
+                MobileParty.MainParty,
+                MobileParty.NavigationType.None,
+                s => s.IsTown
+            );
+
+            TownMarketData marketData = closestTownSettlement.MarketData;
 
             List<Equipment> equipmentList = new List<Equipment> {
                 command.Character.Equipment
