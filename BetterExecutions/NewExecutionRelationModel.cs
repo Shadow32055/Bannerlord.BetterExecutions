@@ -11,60 +11,105 @@ namespace BetterExecutions {
         public static Dictionary<Hero, bool> IsHeroRuler = new();
 
         // Must be in a clan for hero to run through this natively.
-        public override int GetRelationChangeForExecutingHero(Hero victim, Hero hero, out bool showQuickNotification) {
-            showQuickNotification = false;
-            int result = 0;
+        public override int GetRelationChangeForExecutingHero(Hero victim, Hero hero, out bool showQuickNotification)
+		{
+			int result = 0;
+			showQuickNotification = false;
 
-            try {
-                if (!hero.IsHumanPlayerCharacter && hero.IsAlive && hero != victim && hero.Age >= BetterExecutions.Settings.MinimumAge) {
-                    // POSITIVE NUMBER IS BETTER MORALITY
-                    int traitModifier = (hero.GetTraitLevel(DefaultTraits.Honor) * BetterExecutions.Settings.HonorModifier) + (hero.GetTraitLevel(DefaultTraits.Mercy) * BetterExecutions.Settings.MercyModifier);
+			if (hero.IsHumanPlayerCharacter || !hero.IsAlive || hero == victim || hero.Age < BetterExecutions.Settings.MinimumAge)
+			{
+				return result;
+			}
 
-                    // friend/enemy, relevant to hero
-                    if (hero.IsFriend(victim) || hero.IsEnemy(victim)) {
-                        int relationChange = (int)Math.Round((double)hero.GetBaseHeroRelation(victim) / 2);
+			// Familial Relations
+			if (hero.Father == victim || hero.Mother == victim)
+			{
+				result -= BetterExecutions.Settings.ParentRelationLoss;
+				//NotifyHelper.WriteMessage($"Negitive relation change: '{hero.Name}' was the child of '{victim.Name}' result:'{result}'", MsgType.Alert);
+			}
 
-                        if (hero.IsFriend(victim) && traitModifier < 0)
-                            relationChange -= Math.Abs(traitModifier);
-                        else
-                            relationChange -= traitModifier;
+			if (victim.Father == hero || victim.Mother == hero)
+			{
+				result -= BetterExecutions.Settings.ChildRelationLoss;
+				//NotifyHelper.WriteMessage($"Negitive relation change: '{hero.Name}' was the parent of '{victim.Name}' result:'{result}'", MsgType.Alert);
+			}
 
-                        result -= relationChange;
-                    }
+			if (hero.Spouse == victim)
+			{
+				result -= BetterExecutions.Settings.SpouseRelationLoss;
+				//NotifyHelper.WriteMessage($"Negitive relation change: '{hero.Name}' was the spouse of '{victim.Name}' result:'{result}'", MsgType.Alert);
+			}
 
-                    // in the family
-                    if (hero.Father == victim || victim.Father == hero || hero.Mother == victim || victim.Mother == hero)
-                        result -= BetterExecutions.Settings.ParentChildRelationLoss;
-                    else if (hero.Siblings.Contains(victim) || victim.Siblings.Contains(hero))
-                        result -= BetterExecutions.Settings.SiblingRelationLoss;
-                    else if (hero.Clan == victim.Clan)
-                        result -= BetterExecutions.Settings.SameClanRelationLoss;
+			if (hero.Siblings.Contains(victim))
+			{
+				result -= BetterExecutions.Settings.SiblingRelationLoss;
+				//NotifyHelper.WriteMessage($"Negitive relation change: '{hero.Name}' and '{victim.Name}' were siblings ' result:'{result}'", MsgType.Alert);
+			}
 
-                    // factions and wars
-                    if (hero.MapFaction == victim.MapFaction) {
-                        int loss = BetterExecutions.Settings.SameFactionRelationLoss;
-                        loss += Math.Abs(traitModifier);
-                        if (IsHeroRuler[victim])
-                            loss *= 4;
-                        if (loss > 0)
-                            loss = 0;
-                        result -= loss;
-                    } else if (hero.MapFaction.IsAtWarWith(victim.MapFaction)) {
-                        int gain = BetterExecutions.Settings.EnemyFactionRelationGain;
-                        gain -= Math.Abs(traitModifier);
-                        if (IsHeroRuler[victim])
-                            gain *= 4;
-                        if (gain < 0)
-                            gain = 0;
-                        result += gain;
-                    }
-                }
+			// Personal Relations
+			if (hero.IsEnemy(victim))
+			{
+				result += BetterExecutions.Settings.EnemyRelationGain;
+				//NotifyHelper.WriteMessage($"Positive relation change: '{hero.Name}' and '{victim.Name}' were enemies ' result:'{result}'", MsgType.Alert);
+			}
+			if (hero.IsFriend(victim))
+			{
+				result -= BetterExecutions.Settings.FriendRelationLoss;
+				//NotifyHelper.WriteMessage($"Negitive relation change: '{hero.Name}' and '{victim.Name}' were friends ' result:'{result}'", MsgType.Alert);
+			}
 
-                return result;
-            } catch (Exception e) {
-                NotifyHelper.WriteError(BetterExecutions.ModName, "NewExecutionRelationModel.GetRelationChangeForExecutingHero threw exception: " + e);
-                return 0;
-            }
+			// Clan Relations
+			if (hero.Clan == victim.Clan)
+			{
+				result -= BetterExecutions.Settings.SameClanRelationLoss;
+				//NotifyHelper.WriteMessage($"Negitive relation change: '{hero.Name}' and '{victim.Name}' were in the same clan ' result:'{result}'", MsgType.Alert);
+			}
+
+
+			// Faction Relations
+			if (hero.MapFaction == victim.MapFaction)
+			{
+				result -= BetterExecutions.Settings.SameFactionRelationLoss;
+				//NotifyHelper.WriteMessage($"Negitive relation change: '{hero.Name}' and '{victim.Name}' were in the same faction ' result:'{result}'", MsgType.Alert);
+			}
+			if (victim.MapFaction.IsAtWarWith(hero.MapFaction))
+			{
+				result += BetterExecutions.Settings.EnemyFactionRelationGain;
+				//NotifyHelper.WriteMessage($"Positive relation change: '{hero.Name}' and '{victim.Name}' were in enemy factions ' result:'{result}'", MsgType.Alert);
+			}
+
+			// Trait Modifiers
+			if (IsHeroRuler[victim])
+			{
+				result *= BetterExecutions.Settings.RulerMultiplier;
+				//NotifyHelper.WriteMessage($"Relation change multiplier applied: '{victim.Name}' was a ruler ' result:'{result}'", MsgType.Alert);
+			}
+
+			if (victim.GetTraitLevel(DefaultTraits.Honor) < 0 && result != 0)
+			{
+				result /= BetterExecutions.Settings.HonorModifier;
+				//NotifyHelper.WriteMessage($"Positive relation change multiplier applied: '{victim.Name}' had negative honor ' result:'{result}'", MsgType.Alert);
+			}
+
+			if (victim.GetTraitLevel(DefaultTraits.Honor) > 0)
+			{
+				result *= BetterExecutions.Settings.HonorModifier;
+				//NotifyHelper.WriteMessage($"Negitive relation change multiplier applied: '{victim.Name}' had positive honor ' result:'{result}'", MsgType.Alert);
+			}
+
+			if (hero.GetTraitLevel(DefaultTraits.Mercy) > 0 && result != 0)
+			{
+				result /= BetterExecutions.Settings.MercyModifier;
+				//NotifyHelper.WriteMessage($"Negative relation change multiplier applied: '{hero.Name}' has positive mercy ' result:'{result}'", MsgType.Alert);
+			}
+			if (hero.GetTraitLevel(DefaultTraits.Mercy) < 0)
+			{
+				result *= BetterExecutions.Settings.MercyModifier;
+				//NotifyHelper.WriteMessage($"Positive relation change multiplier applied: '{hero.Name}' has negative mercy ' result:'{result}'", MsgType.Alert);
+			}
+
+			//NotifyHelper.WriteMessage($"Final relation change for '{hero.Name}' executing '{victim.Name}': '{result}'", MsgType.Warning);
+			return result;
         }
     }
 }
