@@ -46,7 +46,7 @@ namespace BetterExecutions {
                 int traitModifier = (captorHonorLevel * BetterExecutions.Settings.HonorModifier) + (captorMercyLevel * BetterExecutions.Settings.MercyModifier);
                 int relation = captor.GetBaseHeroRelation(prisoner);
 
-                int chanceOfExecuting = (int)Math.Round((double)Math.Abs(relation) / 2) - traitModifier;
+                int chanceOfExecuting = (int)Math.Round((double)Math.Abs(relation) / 2) - traitModifier - BetterExecutions.Settings.AIChanceReduction;
                 if (BetterExecutions.Random.Next(1, 101) <= chanceOfExecuting)
                     return true;
             }

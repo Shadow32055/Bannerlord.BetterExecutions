@@ -23,13 +23,14 @@ namespace BetterExecutions.Patches {
 
             Town closestTownSettlement = SettlementHelper.FindNearestTownToMobileParty(
                 MobileParty.MainParty,
-                MobileParty.NavigationType.None,
+                MobileParty.NavigationType.All,
                 s => s.IsTown && !s.IsStarving && !s.IsUnderSiege && !Clan.PlayerClan.MapFaction.IsAtWarWith(s.OwnerClan.MapFaction)
             ) ?? SettlementHelper.FindNearestTownToMobileParty(
                 MobileParty.MainParty,
-                MobileParty.NavigationType.None,
+                MobileParty.NavigationType.All,
                 s => s.IsTown
             );
+
 
             TownMarketData marketData = closestTownSettlement.MarketData;
 
@@ -57,7 +58,7 @@ namespace BetterExecutions.Patches {
                         if (!MathHelper.RandomChance(BetterExecutions.Settings.ExecutionLootUsableChance))
                             continue;
 
-                        if (BetterExecutions.Settings.ExecutionLootPriceThreshold == 0 || BetterExecutions.Settings.ExecutionLootPriceThreshold > itemPrice) {
+                        if (BetterExecutions.Settings.ExecutionLootPriceThreshold == 0 || itemPrice < BetterExecutions.Settings.ExecutionLootPriceThreshold) {
                             PartyBase.MainParty.ItemRoster.AddToCounts(equipmentElement.Item, 1);
                             NotifyHelper.WriteMessage("Added " + equipmentElement.Item.Name + " to inventory.", MsgType.Good);
                         }

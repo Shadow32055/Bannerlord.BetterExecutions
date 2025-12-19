@@ -2,7 +2,9 @@
 using TaleWorlds.CampaignSystem.Actions;
 
 namespace BetterExecutions.Patches {
-    [HarmonyPatch(typeof(KillCharacterAction), "ApplyInternal")]
+    //NO LONGER NEEDED
+
+    /*[HarmonyPatch(typeof(KillCharacterAction), "ApplyInternal")]
     internal class KillCharacterActionPatch {
         [HarmonyPrefix]
         private static void Prefix(KillCharacterAction.KillCharacterActionDetail actionDetail) {
@@ -29,5 +31,5 @@ namespace BetterExecutions.Patches {
             if (BetterExecutions.HideRelationNotifications)
                 showQuickNotification = false;
         }
-    }
+    }*/
 }
